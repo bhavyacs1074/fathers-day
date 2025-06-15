@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Happy Father's Day!</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      text-align: center;
+    }
+
+    header {
+      background: #4a90e2;
+      color: white;
+      padding: 40px 20px;
+    }
+
+    canvas {
+      margin-top: 30px;
+      max-width: 90%;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .message {
+      text-align: center;
+      margin: 40px 20px;
+    }
+
+    textarea {
+      width: 80%;
+      height: 120px;
+      padding: 10px;
+      font-size: 1em;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #357ab8;
+    }
+
+    #displayMessage {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #eee;
+      margin-top: 40px;
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Happy Father's Day!</h1>
+    <p>Celebrating all the amazing dads out there ❤️</p>
+  </header>
+
+  <!-- 🎧 Background music -->
+  <audio autoplay loop>
+    <source src="Papa-Mere-Papa.mp3" type="audio/mpeg" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- 🖼 Canvas for image transitions -->
+  <canvas id="imageCanvas" width="600" height="400"></canvas>
+
+  <section class="message">
+    <h2>Write a message for your Dad</h2>
+    <textarea id="messageInput" placeholder="Dear Dad, ..."></textarea><br/>
+    <button onclick="showMessage()">Send</button>
+    <div id="displayMessage"></div>
+  </section>
+
+  <footer>
+    <p>Made with ❤️ for Father's Day</p>
+  </footer>
+
+  <script>
+    function showMessage() {
+      const input = document.getElementById('messageInput').value;
+      const display = document.getElementById('displayMessage');
+      display.textContent = input.trim() ? `Your message: "${input}"` : "Please enter a message first!";
+    }
+
+    // === IMAGE TRANSITION LOGIC ===
+    const canvas = document.getElementById('imageCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const imageSources = [
+      '1ad4c4cf-36aa-4b22-8b36-f2be8fccd33b.jpg',
+      '02e12202-127b-4e27-9530-0e608ba6ca9d.jpg',
+      '0907a8ed-477f-4eff-895b-625b469131e0.jpg'
+    ];
+
+    const images = [];
+    let currentIndex = 0;
+    let transitionRadius = 0;
+    let transitionStep = 5;
+    let imageLoaded = false;
+
+    function preloadImages(callback) {
+      let loadedCount = 0;
+      imageSources.forEach((src, i) => {
+        const img = new Image();
+        img.src = src;
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          images[i] = img;
+          loadedCount++;
+          if (loadedCount === imageSources.length) callback();
+        };
+      });
+    }
+
+    function drawImageRadial(img, radius) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const imgData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const newImageData = ctx.createImageData(canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const distance = Math.sqrt(dx*dx + dy*dy);
+
+          const i = (y * canvas.width + x) * 4;
+
+          if (distance <= radius) {
+            newImageData.data[i] = imgData.data[i];
+            newImageData.data[i+1] = imgData.data[i+1];
+            newImageData.data[i+2] = imgData.data[i+2];
+            newImageData.data[i+3] = 255;
+          } else {
+            newImageData.data[i+3] = 0;
+          }
+        }
+      }
+
+      ctx.putImageData(newImageData, 0, 0);
+    }
+
+    function startTransition() {
+      transitionRadius = 0;
+      const img = images[currentIndex];
+
+      function animate() {
+        drawImageRadial(img, transitionRadius);
+        transitionRadius += transitionStep;
+        if (transitionRadius < Math.sqrt(canvas.width**2 + canvas.height**2)) {
+          requestAnimationFrame(animate);
+        } else {
+          // Wait and move to next image
+          setTimeout(() => {
+            currentIndex = (currentIndex + 1) % images.length;
+            startTransition();
+          }, 2500); // show image for 2.5 seconds
+        }
+      }
+
+      animate();
+    }
+
+    preloadImages(() => {
+      startTransition();
+    });
+  </script>
+
+</body>
+</html>
